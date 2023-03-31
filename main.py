@@ -42,31 +42,34 @@ def divide_array(n_threads, big_array):
 
     return arrays
 
-def merge_arrays(array_a, array_b):
+def merge_arrays(arrays):
     """
     Merges arryas
     """
+    (array_a, array_b) = arrays
 
-    y , y = 0, 0
-    results = list()
+    x , y = 0, 0
+    results = []
     
-    size_a, size_b = len(array_a), len(array_b)
-    size = len(array_a) if len(array_b) < len(array_a) else len(array_b)        
+    size_a, size_b = len(array_a), len(array_b)    
 
     while x != size_a and y != size_b:
         if array_a[x] <= array_b[y]:
             new_el = array_a[x] 
             x+=1
-            results.append[new_el] 
+            results.append(new_el)
         else: 
             new_el = array_b[y]
             y+=1
-            results.append[new_el] 
+            results.append(new_el)
+
     if x == size_a: 
-        results.append(array_b[y:].copy())
+        results.extend(array_b[y:])
         
     elif y == size_b:
-        results.append(array_a[x:].copy())
+        results.extend(array_a[x:])
+
+    return results
     
         
 def sort_array(array):
@@ -74,16 +77,18 @@ def sort_array(array):
 
 def divide_threads(arrays):
     n = len(arrays)
-    rest = n%2
+
     # se tem resto, entao faz pop do array de arrays
     # e ja adiciona o array no array final
     # roda sempre como numero par de arrays
     # if rest 
+    last = None
 
-    n_threads = n//2
+    if n % 2:
+        last = arrays.pop()
 
     threads = []
-    for i in range(0, n_threads + 1, 2): 
+    for i in range(0, len(arrays), 2): 
         thread = CustomThread(merge_arrays, arrays[i:i+2])
         threads.append(thread)
     for t in threads:
@@ -91,8 +96,12 @@ def divide_threads(arrays):
 
     for t in threads:
         t.join()
-    pass
+    
+    merged_arrays = [t.value for t in threads]
+    if last:
+        merged_arrays.append(last)
 
+    return merged_arrays
 
 
 """
@@ -103,12 +112,14 @@ https://superfastpython.com/thread-return-values/#Need_to_Return_Values_From_a_T
 """
 
 if __name__ == "__main__":
-    n_threads = sys.argv[1]
-    array_size = sys.argv[2]
+    n_threads = int(sys.argv[1])
+    array_size = int(sys.argv[2])
 
     array = create_array(array_size)
-    arrays = divide_array(n_threads, array)
+    print('Array created:', array)
 
+
+    arrays = divide_array(n_threads, array)
 
     # Sort arrays
     threads = []
@@ -122,12 +133,15 @@ if __name__ == "__main__":
     for t in threads:
         t.join()
 
+    sorted_arrays = [t.value for t in threads]
 
+    # Merge arrays
+    merged_arrays = divide_threads(sorted_arrays)
 
-    while n_threads > 1:
-        if n_threads % 2: n_threads +=1 
-        n_threads = n_threads // 2
+    while len(merged_arrays) > 1:
+        merged_arrays = divide_threads(merged_arrays)
 
+    print('Array after merge sort:', merged_arrays[0])
 
 """
 from multiprocessing.pool import ThreadPool
