@@ -30,11 +30,11 @@ if __name__ == "__main__":
     sorted_arrays = sort_arrays_threads(n_threads, arrays)
 
     # Merge arrays
-    merged_arrays = merge_arrays_threads(sorted_arrays)
-    while len(merged_arrays) > 1:
-        merged_arrays = merge_arrays_threads(merged_arrays)
-
+    while len(sorted_arrays) > 1:
+        sorted_arrays = merge_arrays_threads(sorted_arrays)
+    
     # Stop timer
     end_time = time.time()
+    print(sorted_arrays)
 
     generate_report(n_threads, array_size, start_time, end_time)
