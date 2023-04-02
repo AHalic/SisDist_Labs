@@ -19,12 +19,12 @@ if __name__ == "__main__":
 
     # Create array
     array = create_array(array_size)
+    # Divide array
+    arrays = divide_array(n_threads, array)
 
     # Start timer
     start_time = time.time()
 
-    # Divide array
-    arrays = divide_array(n_threads, array)
 
     # Sort arrays using threads
     sorted_arrays = sort_arrays_threads(n_threads, arrays)
