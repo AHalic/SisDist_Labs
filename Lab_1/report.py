@@ -2,6 +2,9 @@ import os
 import csv
 from datetime import datetime
 
+import pandas as pd
+import matplotlib.pyplot as plt
+
 def generate_report(n_threads: int, array_size: int, start_time: float, end_time: float) -> None:
     """
     Generates a report in CSV format
@@ -26,3 +29,15 @@ def generate_report(n_threads: int, array_size: int, start_time: float, end_time
         
         if write_header: writer.writeheader()
         writer.writerow(info)
+
+def scatter_plot_report() -> None:
+    """
+    Plots the report
+    return: None
+
+    obs.: currently, it does not save the plot
+    """
+
+    df = pd.read_csv(r'report.csv', delimiter=';')
+    df.plot(x='n_threads', y='time_elapsed', kind='scatter')
+    plt.show()	
