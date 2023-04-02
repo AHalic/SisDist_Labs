@@ -5,7 +5,7 @@ from custom_thread import CustomThread
 from arrays import create_array, divide_array, sort_arrays_threads, merge_arrays_threads
 from report import generate_report
 
-def parse_args():
+def parse_args() -> tuple[int, int]:
     parser = argparse.ArgumentParser(description='Merge sort with threads')
     parser.add_argument('n_threads', type=int, help='Number of threads')
     parser.add_argument('array_size', type=int, help='Size of the array')

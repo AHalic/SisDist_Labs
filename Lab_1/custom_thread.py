@@ -6,7 +6,7 @@ class CustomThread(Thread):
     Based on https://superfastpython.com/thread-return-values/#Need_to_Return_Values_From_a_Thread
     """
 
-    def __init__(self, func, params):
+    def __init__(self, func: callable, params: list) -> None:
         """
         Constructor
         @param func: function to be executed in a new thread
@@ -21,7 +21,7 @@ class CustomThread(Thread):
         self.func = func
         self.params = params
  
-    def run(self):
+    def run(self) -> None:
         """	
         Run the thread, saving the return value in an instance variable
         """

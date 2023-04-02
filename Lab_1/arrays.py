@@ -1,7 +1,7 @@
 import random 
 from custom_thread import CustomThread
 
-def create_array(size):
+def create_array(size: int) -> list:
     """
     Creates a random array of size
     @param size: size of array
@@ -11,7 +11,7 @@ def create_array(size):
     return array
 
 
-def divide_array(n_threads, big_array):
+def divide_array(n_threads: int, big_array: list) -> list:
     """
     Divides array, copying arrays. Obs.: see if copy() affects time
     @param n_threads: number of threads
@@ -31,7 +31,7 @@ def divide_array(n_threads, big_array):
     return arrays
 
 
-def merge_arrays(arrays):
+def merge_arrays(arrays: list) -> list:
     """
     Merges arrays in a sorted way
     @param arrays: list of arrays to be merged
@@ -63,7 +63,7 @@ def merge_arrays(arrays):
     return results
     
         
-def sort_array(array):
+def sort_array(array: list) -> list:
     """
     Sorts array function for CustomThread
     @param array: array to be sorted
@@ -71,7 +71,7 @@ def sort_array(array):
     """
     return sorted(array)
 
-def sort_arrays_threads(n_threads, arrays):
+def sort_arrays_threads(n_threads: int, arrays: list) -> list:
     """
     Sorts arrays using threads
     @param arrays: list of arrays to be sorted
@@ -96,7 +96,7 @@ def sort_arrays_threads(n_threads, arrays):
     return [t.value for t in threads]
 
 
-def merge_arrays_threads(arrays):
+def merge_arrays_threads(arrays: list) -> list:
     """
     Divide threads in pairs and merge them until there is only one array, using threads
     @param arrays: list of arrays to be merged

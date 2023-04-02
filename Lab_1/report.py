@@ -2,7 +2,15 @@ import os
 import csv
 from datetime import datetime
 
-def generate_report(n_threads, array_size, start_time, end_time):
+def generate_report(n_threads: int, array_size: int, start_time: float, end_time: float) -> None:
+    """
+    Generates a report in CSV format
+    @param n_threads: Number of threads
+    @param array_size: Size of the array
+    @param start_time: Start time of the execution
+    @param end_time: End time of the execution
+    return: None
+    """
     info = {
         "n_threads": n_threads,
         "array_size": array_size,
