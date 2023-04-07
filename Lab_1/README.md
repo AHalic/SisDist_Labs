@@ -43,7 +43,10 @@ A implementação pode ser dividida em três partes:
 - Ordenação dos arrays iniciais
 - *Merge* de arrays de forma ordenada
 
-Para ambas etapas, foi utilizada uma classe customizada de threads. Esta classe herda da classe Thread do pacote threading. O seu propósito é para armazenamento do resultado de cada função executada nas threads.
+Para ambas etapas, foi testado tanto o uso de threads quanto o de processos. Para as threads, utilizou-se uma classe que herda a classe [Threads](https://docs.python.org/3/library/threading.html#thread-objects) do pacote threading. O seu propósito é para armazenamento do resultado de cada função executada nas threads.
+
+Já para os processos também usou-se uma classe customizada, esta herda a classe Process do pacote [multiprocessing](https://docs.python.org/3/library/multiprocessing.html). E utiliza Queues para obter os resultados de cada processo. 
+
 
 ### Geração dos arrays
 
@@ -51,21 +54,28 @@ Esta etapa consiste na criação dos arrays de quantidade **n** e na divisão de
 
 ### Ordenação dos arrays iniciais
 
-Essa etapa consiste na criação de **k** threads. As threads são primeiro criadas, para depois serem iniciadas. Após todas as threads terminarem, os vetores ordenados são obtidos.
+Essa etapa consiste na criação de **k** threads. As threads são primeiro criadas, para depois serem iniciadas. Cada uma delas é responsável por ordenar um trecho do vetor gerado. Dois algoritmos foram testados, sendo eles o _bubble sort_ e o Timsort (implementado pela função [_sorted_](https://docs.python.org/3/library/functions.html#sorted) do python).
 
 ### *Merge* de arrays de forma ordenada
 
-Essa etapa consiste na junção dos arrays de forma ordenada. A junção dos vetores são feitas em pares, em que cada junção é feito por uma thread. Se há uma quantidade impar de vetores, o último vetor não é considerado para junção de threads até a última junção. 
+Essa etapa consiste na junção dos arrays de forma ordenada. A junção dos vetores são feitas em pares, em que cada junção é feito por uma thread ou processo. Se há uma quantidade impar de vetores, o último vetor é deixado de lado até a última junção. 
 
 Essa etapa é dividida da seguinte forma:
 ```python
 # Merge arrays
 while len(sorted_arrays) > 1:
-    sorted_arrays = merge_arrays_threads(sorted_arrays)
+    sorted_arrays = merge_arrays(sorted_arrays)
 ```
-Desta forma, é feito a primeira junção e atribuido um nome aos novos vetores. Caso há mais que 1 vetor, significa que ainda tem como fazer junção e o processo continua. 
+Desta forma, é feito a primeira junção e atribuido um nome aos novos vetores. Caso exista mais que 1 vetor, significa que ainda tem como fazer junção e o processo continua. 
 
 ## Análise
+Os testes se iniciaram com o uso de Threads e a função sorted para a ordenação. Esperava-se que o tempo de execução diminuisse ao usar uma quantidade de threads entre 4 ou 8 (quantidade de cores do processador) e os arrays fossem muito grandes.
+
+No entanto, o resultado não foi o esperado, uma vez que o tempo não melhorava independente da quantidade de threads e tamanho de array.
+
+Em seguida, foi feito o teste com o uso de processos. Esperava-se que o uso de processos aumenta-se o tempo em comparação com o uso de threads, uma vez que o custo de criar processos é maior que o custo de criar threads. De fato essa diferença foi notável nos resultados, além disso também houve melhora do tempo independente do número de processos e do tamanho do array.
+
+Por fim, foi feito o teste utilizando threads e um algoritmo de ordenação menos eficiente que o Timsort ( O(nlg(n)) ), escolheu-se o Bubble Sort ( O(n²) ). Foi então possível notar uma melhora no tempo quando utilizados 4 e 8 threads, independente do tamanho do array.
 
 ## Referencias
 
