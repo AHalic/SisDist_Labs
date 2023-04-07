@@ -87,17 +87,21 @@ def bubble_sort_array(array: list) -> list:
                 array[j], array[j+1] = array[j+1], array[j]
     return array
 
-def sort_arrays_threads(n_threads: int, arrays: list) -> list:
+def sort_arrays_threads(n_threads: int, arrays: list, sort_type:str) -> list:
     """
     Sorts arrays using threads
     @param arrays: list of arrays to be sorted
     @param n_threads: number of threads
     return: list of sorted arrays
     """
+    if sort_type == "bubble":
+        func = bubble_sort_array
+    else:
+        func = sort_array
     
     threads = []
     for i in range(n_threads):
-        thread = CustomThread(bubble_sort_array, arrays[i])
+        thread = CustomThread(func, arrays[i])
         threads.append(thread)
     
     # Start sorting in threads
@@ -149,18 +153,22 @@ def merge_arrays_threads(arrays: list) -> list:
     return merged_arrays
 
     
-def sort_arrays_processes(n_processes: int, arrays: list) -> list:
+def sort_arrays_processes(n_processes: int, arrays: list, sort_type:str) -> list:
     """
     Sorts arrays using processes
     @param arrays: list of arrays to be sorted
     @param n_processes: number of processes
     return: list of sorted arrays
     """
-    
+    if sort_type == "bubble":
+        func = bubble_sort_array
+    else:
+        func = sort_array
+
     processes = []
     q = Queue()
     for i in range(n_processes):
-        process = CustomProcess(q, sort_array, arrays[i])
+        process = CustomProcess(q, func, arrays[i])
         processes.append(process)
     
     # Start sorting in processes
