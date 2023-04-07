@@ -2,7 +2,7 @@ import argparse
 import time
 
 from custom_thread import CustomThread
-from arrays import create_array, divide_array, sort_arrays_threads, merge_arrays_threads
+from arrays import create_array, divide_array, sort_arrays_threads, merge_arrays_threads, sort_arrays_processes, merge_arrays_processes
 from report import generate_report
 
 def parse_args() -> tuple[int, int]:
@@ -27,11 +27,13 @@ if __name__ == "__main__":
 
 
     # Sort arrays using threads
-    sorted_arrays = sort_arrays_threads(n_threads, arrays)
+    # sorted_arrays = sort_arrays_threads(n_threads, arrays)
+    sorted_arrays = sort_arrays_processes(n_threads, arrays)
 
     # Merge arrays
     while len(sorted_arrays) > 1:
-        sorted_arrays = merge_arrays_threads(sorted_arrays)
+        sorted_arrays = merge_arrays_processes(sorted_arrays)
+        # sorted_arrays = merge_arrays_threads(sorted_arrays)
     
     # Stop timer
     end_time = time.time()

@@ -1,5 +1,8 @@
 import random 
 from custom_thread import CustomThread
+from custom_process import CustomProcess
+from multiprocessing import Queue 
+
 
 def create_array(size: int) -> list:
     """
@@ -138,6 +141,71 @@ def merge_arrays_threads(arrays: list) -> list:
     
     # Get merged arrays from threads
     merged_arrays = [t.value for t in threads]
+
+    # Add last array if odd
+    if last:
+        merged_arrays.append(last)
+
+    return merged_arrays
+
+    
+def sort_arrays_processes(n_processes: int, arrays: list) -> list:
+    """
+    Sorts arrays using processes
+    @param arrays: list of arrays to be sorted
+    @param n_processes: number of processes
+    return: list of sorted arrays
+    """
+    
+    processes = []
+    q = Queue()
+    for i in range(n_processes):
+        process = CustomProcess(q, sort_array, arrays[i])
+        processes.append(process)
+    
+    # Start sorting in processes
+    for t in processes:
+        t.start()
+
+    # Wait for all processes to finish
+    for t in processes:
+        t.join()
+
+    # Get sorted arrays from processes
+    return [q.get() for t in processes]
+
+def merge_arrays_processes(arrays: list) -> list:
+    """
+    Divide processes in pairs and merge them until there is only one array, using processes
+    @param arrays: list of arrays to be merged
+    return: list with only one array
+    """
+
+    n = len(arrays)
+    last = None
+
+    # If odd, remove last array
+    if n % 2:
+        last = arrays.pop()
+
+    # Create processes, with merge function for 2 arrays at a time
+    processes = []
+
+    q = Queue()
+    for i in range(0, len(arrays), 2): 
+        processes.append(CustomProcess(q, merge_arrays, arrays[i:i+2]))
+
+    # Start merging processes
+    for p in processes:
+        p.start()
+
+    # Wait for all processes to finish
+    merged_arrays = []
+    for p in processes:
+        p.join()
+        merged_arrays.append(q.get())
+    
+    # Get merged arrays from processes
 
     # Add last array if odd
     if last:
