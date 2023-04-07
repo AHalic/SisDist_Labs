@@ -19,8 +19,8 @@ def divide_array(n_threads: int, big_array: list) -> list:
     return: list of arrays
     """
     size_floor = len(big_array) // n_threads
-    arrays = list()
-    
+    arrays = []
+
     for i in range(0, n_threads):
         if i < n_threads -1:
             new_array = big_array[size_floor*i: size_floor*(i+1)].copy()
@@ -71,6 +71,19 @@ def sort_array(array: list) -> list:
     """
     return sorted(array)
 
+def bubble_sort_array(array: list) -> list:
+    """
+    Sorts array function for CustomThread
+    @param array: array to be sorted
+    return: sorted array
+    """
+    size = len(array)
+    for i in range(size):
+        for j in range(size - i - 1):
+            if array[j] > array[j+1]:
+                array[j], array[j+1] = array[j+1], array[j]
+    return array
+
 def sort_arrays_threads(n_threads: int, arrays: list) -> list:
     """
     Sorts arrays using threads
@@ -81,7 +94,7 @@ def sort_arrays_threads(n_threads: int, arrays: list) -> list:
     
     threads = []
     for i in range(n_threads):
-        thread = CustomThread(sort_array, arrays[i])
+        thread = CustomThread(bubble_sort_array, arrays[i])
         threads.append(thread)
     
     # Start sorting in threads
