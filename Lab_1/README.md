@@ -71,6 +71,8 @@ Desta forma, é feito a primeira junção e atribuido um nome aos novos vetores.
 ## Análise
 Os testes se iniciaram com o uso de Threads e a função sorted para a ordenação. Esperava-se que o tempo de execução diminuisse ao usar uma quantidade de threads entre 4 ou 8 (quantidade de cores do processador) e os arrays fossem muito grandes.
 
+Foi feito testes com arrays variando de 100 até 1000000 (limite devido a tempo). Para questão da análise, vamos considerar um array de tamanho 1000.
+
 No entanto, o resultado não foi o esperado, uma vez que o tempo não melhorava independente da quantidade de threads e tamanho de array. Abaixo o gráfico que mostra esse comportamento para um array de tamanho 1000.
 
 ![img](analysis/Thread_python.png)
