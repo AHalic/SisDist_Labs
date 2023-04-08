@@ -29,6 +29,37 @@ python main.py 32 1000 --sort_type=python
 python main.py 32 1000 --sort_type=python
 python main.py 32 1000 --sort_type=python
 
+python main.py 1 1000 --use_process
+python main.py 1 1000 --use_process
+python main.py 1 1000 --use_process
+python main.py 1 1000 --use_process
+python main.py 1 1000 --use_process
+python main.py 2 1000 --use_process
+python main.py 2 1000 --use_process
+python main.py 2 1000 --use_process
+python main.py 2 1000 --use_process
+python main.py 2 1000 --use_process
+python main.py 4 1000 --use_process
+python main.py 4 1000 --use_process
+python main.py 4 1000 --use_process
+python main.py 4 1000 --use_process
+python main.py 4 1000 --use_process
+python main.py 8 1000 --use_process
+python main.py 8 1000 --use_process
+python main.py 8 1000 --use_process
+python main.py 8 1000 --use_process
+python main.py 8 1000 --use_process
+python main.py 16 1000 --use_process
+python main.py 16 1000 --use_process
+python main.py 16 1000 --use_process
+python main.py 16 1000 --use_process
+python main.py 16 1000 --use_process
+python main.py 32 1000 --use_process
+python main.py 32 1000 --use_process
+python main.py 32 1000 --use_process
+python main.py 32 1000 --use_process
+python main.py 32 1000 --use_process
+
 python main.py 1 1000 --sort_type=bubble
 python main.py 1 1000 --sort_type=bubble
 python main.py 1 1000 --sort_type=bubble
@@ -60,33 +91,6 @@ python main.py 32 1000 --sort_type=bubble
 python main.py 32 1000 --sort_type=bubble
 python main.py 32 1000 --sort_type=bubble
 
-python main.py 1 1000 --use_process
-python main.py 1 1000 --use_process
-python main.py 1 1000 --use_process
-python main.py 1 1000 --use_process
-python main.py 1 1000 --use_process
-python main.py 2 1000 --use_process
-python main.py 2 1000 --use_process
-python main.py 2 1000 --use_process
-python main.py 2 1000 --use_process
-python main.py 2 1000 --use_process
-python main.py 4 1000 --use_process
-python main.py 4 1000 --use_process
-python main.py 4 1000 --use_process
-python main.py 4 1000 --use_process
-python main.py 4 1000 --use_process
-python main.py 8 1000 --use_process
-python main.py 8 1000 --use_process
-python main.py 8 1000 --use_process
-python main.py 8 1000 --use_process
-python main.py 8 1000 --use_process
-python main.py 16 1000 --use_process
-python main.py 16 1000 --use_process
-python main.py 16 1000 --use_process
-python main.py 16 1000 --use_process
-python main.py 16 1000 --use_process
-python main.py 32 1000 --use_process
-python main.py 32 1000 --use_process
-python main.py 32 1000 --use_process
-python main.py 32 1000 --use_process
-python main.py 32 1000 --use_process
+python analysis/analysis.py
+python analysis/analysis.py --sort_type=bubble
+python analysis/analysis.py --use_process
