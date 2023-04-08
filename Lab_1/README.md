@@ -1,6 +1,7 @@
 # Laboratório I – Paralelismo de Processos e Threads
 
-O laboratório consiste em realizar um merge sort utilizando threads. O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon.
+O laboratório consiste em realizar um merge sort utilizando threads. O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse [este link](https://youtu.be/9KBhEfurvQg).
+
 
 ## Configuração
 O programa foi desenvolvido com a linguagem Python 3.10, utilizando pacotes da biblioteca padrão de python, pandas e matplotlib. Para configurar sua máquina, é necessário instalar as dependências utilizadas. Aconselha se a criação de um ambiente {ambiente} da seguinte forma:
@@ -84,8 +85,6 @@ Em seguida, foi feito o teste com o uso de processos. Esperava-se que o uso de p
 Por fim, foi feito o teste utilizando threads e um algoritmo de ordenação menos eficiente que o Timsort ( O(nlg(n)) ), escolheu-se o Bubble Sort ( O(n²) ). Foi então possível notar uma melhora no tempo quando utilizados 4 e 8 threads, independente do tamanho do array. Abaixo o gráfico que mostra esse comportamento para um array de tamanho 1000.
 
 ![img](analysis/Thread_bubble.png)
-
-Para ver a análise em vídeo, acesse [este link](https://youtu.be/9KBhEfurvQg).
 
 ## Referencias
 
