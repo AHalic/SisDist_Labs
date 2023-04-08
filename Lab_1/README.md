@@ -1,6 +1,6 @@
 # Laboratório I – Paralelismo de Processos e Threads
 
-O laboratório consiste em realizar um merge sort utilizando threads. 
+O laboratório consiste em realizar um merge sort utilizando threads. O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon.
 
 ## Configuração
 O programa foi desenvolvido com a linguagem Python 3.10, utilizando pacotes da biblioteca padrão de python, pandas e matplotlib. Para configurar sua máquina, é necessário instalar as dependências utilizadas. Aconselha se a criação de um ambiente {ambiente} da seguinte forma:
