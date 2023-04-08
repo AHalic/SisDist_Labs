@@ -52,9 +52,9 @@ def process_main(n_threads, arrays, sort_type):
 
 if __name__ == "__main__":
     # Parse arguments
-    n_threads, array_size, use_process, sort_type = parse_args()
+    n, array_size, use_process, sort_type = parse_args()
 
-    print(f"n_threads: {n_threads}")
+    print(f"n: {n}")
     print(f"array_size: {array_size}")
     print(f"use_process: {use_process}")
     print(f"sort_type: {sort_type}")
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     # Create array
     array = create_array(array_size)
     # Divide array
-    arrays = divide_array(n_threads, array)
+    arrays = divide_array(n, array)
 
     # Sort arrays using threads
     if use_process:
-        process_main(n_threads, arrays, sort_type)
+        process_main(n, arrays, sort_type)
     else: 
-        thread_main(n_threads, arrays, sort_type)
+        thread_main(n, arrays, sort_type)
