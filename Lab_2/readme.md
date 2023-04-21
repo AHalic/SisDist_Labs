@@ -1,6 +1,6 @@
 # Laboratório II – Aprendizado Federado
 
-O laboratório consiste em aprender mais sobre aprendizado federado, comparado com aprendizado padrão e aprendendo sobre o pacote flwr. O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse [este link](https://youtu.be/9KBhEfurvQg).
+O laboratório consiste em aprender mais sobre aprendizado federado, comparado com aprendizado padrão e aprendendo sobre o pacote flwr. O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse [este link](https://youtu.be/YD3U71twAt0).
 
 
 ## Configuração
