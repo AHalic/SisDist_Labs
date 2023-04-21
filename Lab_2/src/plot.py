@@ -6,7 +6,6 @@ def plot_all_models(path):
     path = pl.Path(path)
     files = path.glob("*.csv")
 
-    axis = []
     for file in files:
         df = pd.read_csv(file)
         plt.plot(df['accuracy'], label=file.stem)
@@ -18,5 +17,5 @@ def plot_all_models(path):
     plt.ylabel("Accuracy")
     plt.title("Accuracy per round/epoch for each model")
     plt.legend(loc="lower right")
-    plt.savefig(f"results/accuracy.png")
+    plt.savefig(f"{path}/accuracy.png")
 
