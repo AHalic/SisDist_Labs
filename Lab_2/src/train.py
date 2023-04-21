@@ -6,7 +6,7 @@ from src.flower_client import flower_client_model
 from src.models import define_model
 from src.utils import INPUT_SHAPE, NUM_CLASSES, BATCH_SIZE, NUM_CLIENTS
 
-def train_model_federative(epochs, strategy):
+def train_model_federated(epochs, strategy):
     print("starting simulation")
     
     # Start simulation
