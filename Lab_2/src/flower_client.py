@@ -26,7 +26,7 @@ class FlowerClient(fl.client.NumPyClient):
         loss, acc = self.model.evaluate(self.x_test, self.y_test, verbose=2)
         return loss, len(self.x_test), {"accuracy": acc}
 
-def flower_client_model(cid: str) -> fl.client.Client:   
+def flower_client_model() -> fl.client.Client:   
     (x_train, y_train), (x_test, y_test) = load_data()
     sample_size_train = int((1/NUM_CLIENTS)*len(x_train))
     sample_size_test = int((1/NUM_CLIENTS)*len(x_test))
