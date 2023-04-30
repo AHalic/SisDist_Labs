@@ -1,6 +1,7 @@
 grpc/
 mine_grpc/
 .DS_Store
+*_pb2*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
