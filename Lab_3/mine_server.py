@@ -11,30 +11,35 @@ def server():
     mine_grpc_pb2_grpc.add_apiServicer_to_server(MineServicer(), grpc_server)
     grpc_server.add_insecure_port('[::]:8080')
     grpc_server.start()
+    newTransaction()
     grpc_server.wait_for_termination()
 
 register = []
 
 def newTransaction():
+    difficulty = random.randint(1, 6)
+    print(f"New challenge: lvl {difficulty}")
+    
     register.append(
         {
             "transactionID": len(register),
-            "challenge": random.randint(1, 6),
+            "challenge": difficulty,
             "solution": None,
-            "winner": -1
+            "winner": 0
         }
     )
 
 class MineServicer(mine_grpc_pb2_grpc.apiServicer):
-    # TODO: ver se para a função
     def isTransactionValid(self, request, context):
         if request.transactionId < 0 or request.transactionId >= len(register):
-            return mine_grpc_pb2.intResult(result=-1)
+            return 1
+        else:
+            return 0
 
     def existsNoWinner(self, request):
-        return 1 if register[request.transactionId]["winner"] == -1 else 0
+        return 1 if register[request.transactionId]["winner"] == 0 else 0
 
-    def getTransactionID(self, request, context):
+    def getTransactionId(self, request, context):
         """
         Retorna o valor atual <int> da transação com desafio ainda pendente de solução.
         """
@@ -46,7 +51,9 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
         do desafio associado a ele. Retorne -1 se o
         transactionID for inválido.
         """
-        self.isTransactionValid(request, context)
+        if self.isTransactionValid(request, context):
+            return mine_grpc_pb2.intResult(result=-1)
+        
         return mine_grpc_pb2.intResult(result=register[request.transactionId]["challenge"])
     
     def getTransactionStatus(self, request, context):
@@ -57,7 +64,8 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
         possua desafio pendente. Retorne -1 se a
         transactionID for inválida.
         """
-        self.isTransactionValid(request, context)
+        if self.isTransactionValid(request, context):
+            return mine_grpc_pb2.intResult(result=-1)
         return mine_grpc_pb2.intResult(result=(self.existsNoWinner(request)))
 
     def submitChallenge(self, request, context):
@@ -71,7 +79,8 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
         inválida.
         """
 
-        self.isTransactionValid(request, context)
+        if self.isTransactionValid(request, context):
+            return mine_grpc_pb2.intResult(result=-1)
 
         if not self.existsNoWinner(request):
             return mine_grpc_pb2.intResult(result=2)
@@ -85,6 +94,7 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
             register[id]["solution"] = request.solution
             register[id]["winner"] = request.clientId
 
+            newTransaction()
             return mine_grpc_pb2.intResult(result=1)
         else:
             return mine_grpc_pb2.intResult(result=0)
@@ -97,9 +107,10 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
         for inválida.
         """
 
-        self.isTransactionValid(request, context)
+        if self.isTransactionValid(request, context):
+            return mine_grpc_pb2.intResult(result=-1)
         
-        if self.existsNoWinner(request):
+        if not self.existsNoWinner(request):
             return mine_grpc_pb2.intResult(result=(register[request.transactionId]["winner"]))
         else:
             return mine_grpc_pb2.intResult(result=0)
@@ -111,8 +122,13 @@ class MineServicer(mine_grpc_pb2_grpc.apiServicer):
         tupla) com o status, a solução e o desafio
         associado à transactionID.
         """
-        self.isTransactionValid(request, context)
+        if self.isTransactionValid(request, context):
+            return mine_grpc_pb2.intResult(result=-1)
 
-        return mine_grpc_pb2.strucResult(status=self.existsNoWinner(request), 
+        return mine_grpc_pb2.structResult(status=self.existsNoWinner(request), 
                                          solution=register[request.transactionId]["solution"], 
                                          challenge=register[request.transactionId]["challenge"])
+    
+if __name__ == '__main__':
+    print("Starting server. Listening on port 8080.")
+    server()
