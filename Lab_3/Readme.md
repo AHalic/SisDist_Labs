@@ -28,6 +28,19 @@ Após isso, instale as dependências utilizando
 pip install -r requirements.txt
 ```
 
+## Execução
+Para executar o sistema, primeiro deve-se rodar o comando abaixo no terminal
+```sh
+python -m grpc_tools.protoc --proto_path=. ./mine_grpc.proto --python_out=. --grpc_python_out=.
+```
+Após isso, dois arquivos serão criados: 'mine_grpc_pb2.py' e 'mine_grpc_pb2_grpc.py', que são utilizados pelo servidor e cliente.
+
+Por fim, execute o servidor e o cliente em terminais separados, e nessa ordem
+```sh
+python mine_server.py
+python mine_client.py
+```
+
 ## Implementação
 A implementação consiste em clientes com o objetivo de mineirar blocos de uma blockchain, para isso, os clientes utilizam o gRPC para
 se conectar ao servidor e obter os dados necessários para resolver o desafio criado.
