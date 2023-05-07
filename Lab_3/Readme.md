@@ -1,6 +1,6 @@
 # Laboratório III - Chamada de Procedimento Remoto
 O laboratório consiste em aprender mais sobre a troca de mensagens entre processos com o chamado gRPC. 
-O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse este link.
+O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse este [link](https://youtu.be/VW2267t7P7s).
 
 ## Configuração
 O programa foi desenvolvido com a linguagem Python 3.10, utilizando pacotes da biblioteca padrão de python e pacotes referentes a implementação do grpc. 
