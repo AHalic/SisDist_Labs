@@ -5,3 +5,4 @@ Este repositório contém os laboratórios desenvolvidos para a disciplina de Si
 ### Sumário
 1.  [Paralelismo de Processos e Threads](Lab_1)
 2.  [Aprendizado Federado](Lab_2)
+3.  [Chamada de Procedimento Remoto](Lab_3)
