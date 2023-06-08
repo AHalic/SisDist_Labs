@@ -1,6 +1,6 @@
 # Laboratório VI - Eleição e Coordenação Distribuída
 O laboratório consiste em aprender mais sobre sistemas distribuídos não centralizados e o funcionamento de eleição nestes. 
-O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse este [link]().
+O grupo é composto por Beatriz Maia, Iago Cerqueira e Sophie Dilhon. Para ver a análise em vídeo, acesse este [link](https://youtu.be/66KjM7WYXVY).
 
 ## Configuração
 O programa foi desenvolvido com a linguagem Python 3.10, utilizando pacotes da biblioteca padrão de python.
