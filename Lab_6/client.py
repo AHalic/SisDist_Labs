@@ -8,7 +8,9 @@ import uuid
 import json
 
 TIMEOUT_LIMIT = 60
-QTDE_CLIENTS = 3
+QTDE_CLIENTS = 10
+MIN_LVL = 10
+MAX_LVL = 20
 
 def parse_args() -> tuple[int, int]:
     """
@@ -88,7 +90,7 @@ class Client:
 
         while time.time() - start < TIMEOUT_LIMIT or len(self.known_clients) < QTDE_CLIENTS:
             self.client.publish("sd/init", msg)
-            time.sleep(10)
+            time.sleep(5)
 
     def on_message(self, client, userdata, msg):
         """
@@ -329,7 +331,7 @@ class Client:
         """
         Function to create a new transaction.
         """
-        difficulty = random.randint(10, 20)
+        difficulty = random.randint(MIN_LVL, MAX_LVL)
         print(f"New challenge: lvl {difficulty}")
         
         challenge = {
