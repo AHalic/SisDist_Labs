@@ -11,6 +11,12 @@ TIMEOUT_LIMIT = 60
 QTDE_CLIENTS = 3
 
 def parse_args() -> tuple[int, int]:
+    """
+    Parse command line arguments.
+
+    Returns:
+        tuple[int, int]: port, host
+    """
     parser = argparse.ArgumentParser(description='Mine blocks serverless')
     parser.add_argument('--port', type=int, help='Port to listen to', default=1883)
     parser.add_argument('--host', type=str, help='Host to listen to', default='localhost')
@@ -19,10 +25,27 @@ def parse_args() -> tuple[int, int]:
     return args.port, args.host
 
 class Client:
+    """
+    Client class.
+
+    Attributes:
+        uuid (str): Client's UUID.
+        port (int): Port to connect to.
+        host (str): Host to connect to.
+        known_clients (list[str]): List of known clients.
+        client (mqtt.Client): MQTT client.
+    """
     uuid = str(uuid.uuid4())
     votes = []
 
     def __init__(self, port, host):
+        """
+        Constructor.
+
+        Args:
+            port (int): Port to connect to.
+            host (str): Host to connect to.
+        """
         print('UUID: ', self.uuid)
         self.port = port
         self.host = host
@@ -38,6 +61,14 @@ class Client:
 
 
     def on_connect(self, client, userdata, flags, rc):
+        """
+        Callback for when a connection is established with the MQTT broker.
+
+        Args:
+            client (mqtt.Client): MQTT client.
+            userdata (Any): User data.
+            flags (dict): Flags.
+        """
         print("Connected with result code "+str(rc))
 
         # Topicos:
@@ -49,6 +80,9 @@ class Client:
         threading.Thread(target=self.send_init).start()
 
     def send_init(self):
+        """
+        Send init message until all clients are known or timeout.
+        """
         start = time.time()
         msg = json.dumps({"ClientID": self.uuid})
 
@@ -57,6 +91,15 @@ class Client:
             time.sleep(10)
 
     def on_message(self, client, userdata, msg):
+        """
+        Callback for when a message is received from the MQTT broker.
+        Depending on the topic of the message calls the appropriate function.
+
+        Args:
+            client (mqtt.Client): MQTT client.
+            userdata (Any): User data.
+            msg (mqtt.MQTTMessage): Message.
+        """
         if msg.topic == "sd/init":
             self.on_init(msg.payload)
 
@@ -73,6 +116,16 @@ class Client:
             self.on_solution(msg.payload)
 
     def on_init(self, msg):
+        """
+        Function for when a init message is received from the MQTT broker.
+        If the client is not known and the number of known clients is less than the number of clients needed,
+        the client is added to the list of known clients.
+        If the number of known clients is equal to the number of clients needed, the client unsubscribes from the init topic
+        and starts the voting.
+
+        Args:
+            msg (mqtt.MQTTMessage): Message.
+        """
         client_id = json.loads(msg)['ClientID']
         print('mensagem de init', msg)
 
@@ -84,6 +137,14 @@ class Client:
             self.send_voting()
 
     def on_voting(self, msg):
+        """
+        Function for when a voting message is received from the MQTT broker.
+        If the number of known clients is equal to the number of clients needed, the client unsubscribes from the voting topic
+        and elect the controller.
+
+        Args:
+            msg (mqtt.MQTTMessage): Message.
+        """
         msg_json = json.loads(msg)
         print('mensagem de voto', msg)
         
@@ -97,6 +158,12 @@ class Client:
             self.elect_leader()
 
     def on_result(self, msg):
+        """
+        Function for when a result message is received from the MQTT broker.
+
+        Args:
+            msg (mqtt.MQTTMessage): Message.
+        """
         msg_json = json.loads(msg)
 
         if msg_json['Result'] == 1 and msg_json['TransactionID'] == self.challenge['TransactionID']:
@@ -105,6 +172,9 @@ class Client:
             self.solution_found = True
 
     def on_challenge(self, msg):
+        """
+        Function for when a challenge message is received from the MQTT broker.
+        """
         msg_json = json.loads(msg)
         self.challenge = msg_json
         self.solution_found = False
@@ -113,6 +183,13 @@ class Client:
         self.search_solution()
 
     def on_solution(self, msg):
+        """
+        Function for when a solution message is received from the MQTT broker.
+        The controller validates the solution and sends a message to the broker saying if it is valid or not.
+
+        Args:
+            msg (mqtt.MQTTMessage): Message.
+        """
         msg_json = json.loads(msg)
 
         challenge = self.challenges[msg_json['TransactionID']]
@@ -139,6 +216,16 @@ class Client:
             threading.Thread(target=self.show_menu).start()
 
     def validate_solution(self, solution, challenge):
+        """
+        Function to validate the solution of the challenge.
+
+        Args:
+            solution (int): Solution of the challenge.
+            challenge (int): Challenge difficulty.
+
+        Returns:
+            bool: True if the solution is valid, False otherwise.
+        """
         challenge_search = '0' * challenge
         result = bin(int(hashlib.sha1(str(solution).encode()).hexdigest(), 16))[2:].zfill(160)
 
@@ -148,6 +235,13 @@ class Client:
             return False
 
     def search_solution_thread(self, transaction_id, challenge):
+        """
+        Function to search for a solution to the challenge.
+        
+        Args:
+            transaction_id (int): Transaction ID.
+            challenge (int): Challenge difficulty.
+        """
         attempts = set()
         while True:
             count = 0
@@ -178,6 +272,9 @@ class Client:
                 break
 
     def search_solution(self):
+        """
+        Function that creates Threads to search for a solution to the challenge.
+        """
         threads = []
         for _ in range(6): 
             threads.append(threading.Thread(target=self.search_solution_thread, args=(self.challenge['TransactionID'], self.challenge['Challenge'])))
@@ -188,12 +285,21 @@ class Client:
 
 
     def send_voting(self):
+        """
+        Function to send a voting message to the MQTT broker.
+        """
         vote = uuid.uuid4()
         vote_msg = json.dumps({"ClientID": self.uuid, "VoteID": str(vote)})
 
         self.client.publish("sd/voting", vote_msg)    
 
     def elect_leader(self):
+        """
+        Function to elect the controller.
+        If the client is the controller, it unsubscribes from the voting topic, subscribes to the challenge topic
+        and shows the menu.
+        """
+
         # finds vote of biggest value, if there is a tie, client ID is used as tie breaker
         max_vote = max(self.votes, key=lambda x: (x['VoteID'], x['ClientID']))
 
@@ -206,17 +312,23 @@ class Client:
             self.show_menu()
          
     def show_menu(self):
+        """
+        Function to show the controller's menu.
+        """
         print("\nEscolha uma das opções abaixo:")
         print("1 - Iniciar desafio")
         print("2 - Encerrar")
 
         option = int(input("Opção: "))
         if option == 1:
-            self.newTransaction()
+            self.new_transaction()
         elif option == 2:
             self.client.disconnect()
 
-    def newTransaction(self):
+    def new_transaction(self):
+        """
+        Function to create a new transaction.
+        """
         difficulty = random.randint(10, 20)
         print(f"New challenge: lvl {difficulty}")
         
