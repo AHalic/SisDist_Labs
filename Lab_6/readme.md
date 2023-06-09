@@ -39,7 +39,7 @@ Neste caso 10 clientes são necessários para que a eleição inicie, então é 
 ## Implementação
 A implementação consiste em clientes com o objetivo de mineirar blocos de uma blockchain, para isso, no entanto, é preciso eleger um cliente para funcionar como servidor (criar desafios e escolher vencedores). Após feita a eleição, os clientes podem se conectar ao servidor e obter os dados necessários para resolver o desafio criado.
 
-A comunicação é feita usando o modelo Publisher/Subscriber, assim os clientes enviam mensagens ao broker, e todos os outros clientes já conectados a recebem. A eleição é iniciada assim que os 10 clientes se conectarem ao canal e enviarem uma mensagem de apresentação. Como os clientes não possuem acesso às mensagens enviadas anteriormente à sua conexão ao canal, após 10 segundos os clientes reenviam suas mensagens.
+A comunicação é feita usando o modelo Publisher/Subscriber, assim os clientes enviam mensagens ao broker, e todos os outros clientes já conectados a recebem. A eleição é iniciada assim que os 10 clientes se conectarem ao canal e enviarem uma mensagem de apresentação. Como os clientes não possuem acesso às mensagens enviadas anteriormente à sua conexão ao canal, após 5 segundos os clientes reenviam suas mensagens.
 
 Uma vez que todos os clientes conheçam todos os outros clientes, a eleição se inicia, e esta consiste em gerar um número aleatório e enviá-lo ao canal de votos. Aquele cliente que sortear o maior número é o ganhador da eleição.
 
