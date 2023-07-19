@@ -7,8 +7,8 @@ import base64
 
 if __name__ == "__main__":
     key_pair_1 = RSA.generate(1024)
-    private_key_1 = key_pair_1.export_key()
-    public_key_1 = key_pair_1.public_key()
+    private_key_1 = key_pair_1.export_key().hex()
+    public_key_1 = key_pair_1.public_key().export_key().hex()
 
     signer_1 = PKCS1_v1_5.new(key_pair_1)
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     msg_hash = SHA256.new()
     msg_hash.update(str.encode(loaded_content))
 
-    verifier = PKCS1_v1_5.new(public_key_1)
+    verifier = PKCS1_v1_5.new(RSA.import_key(bytes.fromhex(public_key_1)))
     verified = verifier.verify(msg_hash, base64.b64decode(sign))
 
     real = json.loads(loaded_content)
