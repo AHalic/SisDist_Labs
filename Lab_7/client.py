@@ -70,12 +70,6 @@ class Client:
 
         self.known_pub_keys[self.node_id] = self.public_key
 
-        print("KNOWN PUB KEYS")
-        print(self.known_pub_keys)
-        print("")
-        print("")
-        print("")
-
         self.signer = PKCS1_v1_5.new(key_pair)
 
         self.client = mqtt.Client()
@@ -138,16 +132,16 @@ class Client:
             userdata (Any): User data.
             msg (mqtt.MQTTMessage): Message.
         """
-        msg = json.loads(msg.payload)
-        payload = msg["Payload"]
 
         if msg.topic == "sd/init":
-            self.on_init(payload)
+            self.on_init(msg.payload)
         
         elif msg.topic == "sd/pubkey":
-            self.on_pubkey(payload)
+            self.on_pubkey(msg.payload)
 
         else:
+            msg = json.loads(msg.payload)
+            payload = msg["Payload"]
             client = msg["NodeId"]
             sign = msg["Sign"]
 
@@ -160,6 +154,7 @@ class Client:
 
             if not verified:
                 raise "Message sign verification failed"
+
             elif msg.topic == "sd/voting":
                 self.on_voting(payload)
 
@@ -180,6 +175,9 @@ class Client:
         Args:
             msg (mqtt.MQTTMessage): Message.
         """
+
+        print('mensagem de pubKey', msg)
+
         msg_json =  json.loads(msg)
         client_id = msg_json['NodeId']
         client_public_key = msg_json['PubKey']
@@ -188,6 +186,7 @@ class Client:
 
         if len(self.known_pub_keys) == len(self.known_clients):
             self.client.unsubscribe('sd/pubkey')
+            print('iniciando votação')
 
             self.send_voting()
 
@@ -220,6 +219,7 @@ class Client:
         msg = json.dumps({"NodeId": self.node_id, "PubKey": self.public_key})
         
         while len(self.known_pub_keys) < len(self.known_clients):
+            print("Sending public key")
             self.client.publish("sd/pubkey", msg)
             time.sleep(5)
 
