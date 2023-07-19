@@ -43,10 +43,12 @@ class Client:
         uuid (str): Client's UUID.
         port (int): Port to connect to.
         host (str): Host to connect to.
+        public_key (str): RSA Public key in Hex.
+        private_key (str): RSA Public key in Hex.
         known_clients (list[str]): List of known clients.
         client (mqtt.Client): MQTT client.
     """
-    uuid = str(uuid.uuid4())
+    node_id = str(uuid.uuid4())
     votes = []
 
     def __init__(self, port, host):
@@ -57,7 +59,7 @@ class Client:
             port (int): Port to connect to.
             host (str): Host to connect to.
         """
-        print('UUID: ', self.uuid)
+        print('NodeId: ', self.node_id)
         self.port = port
         self.host = host
         
@@ -66,7 +68,8 @@ class Client:
         self.public_key = key_pair.public_key().export_key().hex()
 
 
-        self.known_clients = [self.uuid]
+        self.known_clients = [self.node_id]
+        self.known_pub_keys = [{"node_id": self.node_id, "pub_key": self.public_key}]
 
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -93,7 +96,7 @@ class Client:
         # sd/voting: ClientID <int>, Vote <int>
         # sd/result: ClientID <int>, TransactionID <int>, Solution <string>, Result <int>
         # sd/challenge: TransactionID <int>, Challenge <string>
-        client.subscribe([("sd/init", 0), ("sd/voting", 0), ("sd/result", 0), ("sd/challenge", 0)])
+        client.subscribe([("sd/init", 0), ("sd/pubkey", 0), ("sd/voting", 0), ("sd/result", 0), ("sd/challenge", 0)])
         threading.Thread(target=self.send_init).start()
 
     def send_init(self):
@@ -101,7 +104,7 @@ class Client:
         Send init message until all clients are known or timeout.
         """
         start = time.time()
-        msg = json.dumps({"ClientID": self.uuid})
+        msg = json.dumps({"ClientID": self.node_id})
 
         while time.time() - start < TIMEOUT_LIMIT or len(self.known_clients) < QTDE_CLIENTS:
             self.client.publish("sd/init", msg)
@@ -119,6 +122,9 @@ class Client:
         """
         if msg.topic == "sd/init":
             self.on_init(msg.payload)
+        
+        elif msg.topic == "sd/pubkey":
+            self.on_pubkey(msg.payload)
 
         elif msg.topic == "sd/voting":
             self.on_voting(msg.payload)
@@ -131,6 +137,25 @@ class Client:
 
         elif msg.topic == "sd/solution":
             self.on_solution(msg.payload)
+
+    def on_pubkey(self, msg):
+        """
+        Function for when a public_key message is received from the MQTT broker.
+        The key and node_id is added as a dictionary to the list of known_pub_keys
+        
+        Args:
+            msg (mqtt.MQTTMessage): Message.
+        """
+        msg_json =  json.loads(msg)
+        client_id = msg_json['ClientID']
+        client_public_key = msg_json['PublicKey']
+
+        self.known_pub_keys.append({"node_id": client_id, "pub_key": client_public_key})
+
+        if len(self.known_pub_keys) == len(self.known_clients):
+            self.client.unsubscribe('sd/pubkey')
+
+            # TODO
 
     def on_init(self, msg):
         """
@@ -150,14 +175,24 @@ class Client:
             self.known_clients.append(client_id)
         if len(self.known_clients) == QTDE_CLIENTS:
             self.client.unsubscribe("sd/init")
-            print('iniciando votação')
-            
-            # self.send_voting()
+            print('iniciando troca de chaves publicas')
+
+            self.send_pubkey()
+
+    def send_pubkey(self):
+        """
+        Function for when all nodes are known. Nodes start to exchange public_keys
+        """
+        msg = json.dumps({"ClientID": self.node_id, "PublicKey": self.public_key})
+        
+        while len(self.known_pub_keys) < len(self.known_clients):
+            self.client.publish("sd/pubkey", msg)
+            time.sleep(5)
 
     def on_voting(self, msg):
         """
         Function for when a voting message is received from the MQTT broker.
-        If the number of known clients is equal to the number of clients needed, the client unsubscribes from the voting topic
+        If the number of votes is equal to the number of clients needed, the client unsubscribes from the voting topic
         and elect the controller.
 
         Args:
@@ -275,7 +310,7 @@ class Client:
                         
                         result = {
                             'TransactionID': transaction_id,
-                            'ClientID': self.uuid,
+                            'ClientID': self.node_id,
                             'Solution': str(random_num)
                         }
 
@@ -307,7 +342,7 @@ class Client:
         Function to send a voting message to the MQTT broker.
         """
         vote = uuid.uuid4()
-        vote_msg = json.dumps({"ClientID": self.uuid, "VoteID": str(vote)})
+        vote_msg = json.dumps({"ClientID": self.node_id, "VoteID": str(vote)})
 
         self.client.publish("sd/voting", vote_msg)    
 
@@ -321,7 +356,7 @@ class Client:
         # finds vote of biggest value, if there is a tie, client ID is used as tie breaker
         max_vote = max(self.votes, key=lambda x: (x['VoteID'], x['ClientID']))
 
-        if max_vote['ClientID'] == self.uuid:
+        if max_vote['ClientID'] == self.node_id:
             self.client.unsubscribe(["sd/result", "sd/challenge"])
             
             self.client.subscribe("sd/solution")
