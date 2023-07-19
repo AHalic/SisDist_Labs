@@ -7,17 +7,14 @@ import time
 import uuid
 import json
 from Crypto.PublicKey import RSA
-
-private_key = RSA.generate(2048)
-pubkey = private_key.publickey()
-
-private_key = private_key.exportKey().decode("utf-8")
-pubkey = pubkey.exportKey().decode("utf-8")
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
+import base64
 
 
 TIMEOUT_LIMIT = 60
 # TODO!
-QTDE_CLIENTS = 4 
+QTDE_CLIENTS = 2
 MIN_LVL = 10
 MAX_LVL = 20
 
@@ -40,15 +37,16 @@ class Client:
     Client class.
 
     Attributes:
-        uuid (str): Client's UUID.
+        node_id (str): Client's UUID.
         port (int): Port to connect to.
         host (str): Host to connect to.
         public_key (str): RSA Public key in Hex.
-        private_key (str): RSA Public key in Hex.
         known_clients (list[str]): List of known clients.
+        known_pub_keys (dict(NodeID: PubKey)): Dictionary of known clients NodeID as key and PubKey as value
+        signer (PKCS115_SigScheme): Instance of signer from pycryptodome 
         client (mqtt.Client): MQTT client.
     """
-    node_id = str(uuid.uuid4())
+    node_id = str(uuid.uuid4()) # TODO must be int32 in hex
     votes = []
 
     def __init__(self, port, host):
@@ -64,12 +62,21 @@ class Client:
         self.host = host
         
         key_pair = RSA.generate(1024)
-        self.private_key = key_pair.export_key().hex()
         self.public_key = key_pair.public_key().export_key().hex()
 
 
         self.known_clients = [self.node_id]
-        self.known_pub_keys = [{"node_id": self.node_id, "pub_key": self.public_key}]
+        self.known_pub_keys = dict()
+
+        self.known_pub_keys[self.node_id] = self.public_key
+
+        print("KNOWN PUB KEYS")
+        print(self.known_pub_keys)
+        print("")
+        print("")
+        print("")
+
+        self.signer = PKCS1_v1_5.new(key_pair)
 
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
@@ -92,9 +99,9 @@ class Client:
         print("Connected with result code "+str(rc))
 
         # Topicos:
-        # sd/init: ClientID <int>
-        # sd/voting: ClientID <int>, Vote <int>
-        # sd/result: ClientID <int>, TransactionID <int>, Solution <string>, Result <int>
+        # sd/init: NodeId <int>
+        # sd/voting: NodeId <int>, Vote <int>
+        # sd/result: NodeId <int>, TransactionID <int>, Solution <string>, Result <int>
         # sd/challenge: TransactionID <int>, Challenge <string>
         client.subscribe([("sd/init", 0), ("sd/pubkey", 0), ("sd/voting", 0), ("sd/result", 0), ("sd/challenge", 0)])
         threading.Thread(target=self.send_init).start()
@@ -104,11 +111,22 @@ class Client:
         Send init message until all clients are known or timeout.
         """
         start = time.time()
-        msg = json.dumps({"ClientID": self.node_id})
+        msg = json.dumps({"NodeId": self.node_id})
 
         while time.time() - start < TIMEOUT_LIMIT or len(self.known_clients) < QTDE_CLIENTS:
             self.client.publish("sd/init", msg)
             time.sleep(5)
+
+    def sign_and_send(self, topic, msg_json):
+        hash = SHA256.new()
+        hash.update(str.encode(msg_json))
+        sign = self.signer.sign(hash)
+        
+        sign_str = base64.b64encode(sign).decode()
+        
+        msg = json.dumps({"Payload": msg_json, "Sign": sign_str, "NodeId": self.node_id})
+        self.client.publish(topic, msg)
+
 
     def on_message(self, client, userdata, msg):
         """
@@ -120,23 +138,39 @@ class Client:
             userdata (Any): User data.
             msg (mqtt.MQTTMessage): Message.
         """
+        msg = json.loads(msg.payload)
+        payload = msg["Payload"]
+
         if msg.topic == "sd/init":
-            self.on_init(msg.payload)
+            self.on_init(payload)
         
         elif msg.topic == "sd/pubkey":
-            self.on_pubkey(msg.payload)
+            self.on_pubkey(payload)
 
-        elif msg.topic == "sd/voting":
-            self.on_voting(msg.payload)
+        else:
+            client = msg["NodeId"]
+            sign = msg["Sign"]
 
-        elif msg.topic == "sd/result":
-            self.on_result(msg.payload)
+            msg_hash = SHA256.new()
+            msg_hash.update(str.encode(payload))
 
-        elif msg.topic == "sd/challenge":
-            self.on_challenge(msg.payload)
+            pub_key = RSA.import_key(bytes.fromhex(self.known_pub_keys[client]))
+            print("trying: ", pub_key)
+            verified = PKCS1_v1_5.new(pub_key).verify(msg_hash, sign)
 
-        elif msg.topic == "sd/solution":
-            self.on_solution(msg.payload)
+            if not verified:
+                raise "Message sign verification failed"
+            elif msg.topic == "sd/voting":
+                self.on_voting(payload)
+
+            elif msg.topic == "sd/result":
+                self.on_result(payload)
+
+            elif msg.topic == "sd/challenge":
+                self.on_challenge(payload)
+
+            elif msg.topic == "sd/solution":
+                self.on_solution(payload)
 
     def on_pubkey(self, msg):
         """
@@ -147,15 +181,15 @@ class Client:
             msg (mqtt.MQTTMessage): Message.
         """
         msg_json =  json.loads(msg)
-        client_id = msg_json['ClientID']
-        client_public_key = msg_json['PublicKey']
+        client_id = msg_json['NodeId']
+        client_public_key = msg_json['PubKey']
 
-        self.known_pub_keys.append({"node_id": client_id, "pub_key": client_public_key})
+        self.known_pub_keys[client_id] = client_public_key
 
         if len(self.known_pub_keys) == len(self.known_clients):
             self.client.unsubscribe('sd/pubkey')
 
-            # TODO
+            self.send_voting()
 
     def on_init(self, msg):
         """
@@ -168,7 +202,7 @@ class Client:
         Args:
             msg (mqtt.MQTTMessage): Message.
         """
-        client_id = json.loads(msg)['ClientID']
+        client_id = json.loads(msg)['NodeId']
         print('mensagem de init', msg)
 
         if client_id not in self.known_clients and len(self.known_clients) < QTDE_CLIENTS:
@@ -183,7 +217,7 @@ class Client:
         """
         Function for when all nodes are known. Nodes start to exchange public_keys
         """
-        msg = json.dumps({"ClientID": self.node_id, "PublicKey": self.public_key})
+        msg = json.dumps({"NodeId": self.node_id, "PubKey": self.public_key})
         
         while len(self.known_pub_keys) < len(self.known_clients):
             self.client.publish("sd/pubkey", msg)
@@ -201,7 +235,7 @@ class Client:
         msg_json = json.loads(msg)
         print('mensagem de voto', msg)
         
-        if msg_json['ClientID'] not in self.votes:
+        if msg_json['NodeId'] not in self.votes:
             self.votes.append(msg_json)
 
         if len(self.votes) == QTDE_CLIENTS:
@@ -221,7 +255,7 @@ class Client:
 
         if msg_json['Result'] == 1 and msg_json['TransactionID'] == self.challenge['TransactionID']:
             print('\nSolução encontrada: ', msg_json['Solution'])
-            print('Ganhador: ', msg_json['ClientID'])
+            print('Ganhador: ', msg_json['NodeId'])
             self.solution_found = True
 
     def on_challenge(self, msg):
@@ -248,22 +282,22 @@ class Client:
         challenge = self.challenges[msg_json['TransactionID']]
 
         result = {
-            'ClientID': msg_json['ClientID'],
+            'NodeId': msg_json['NodeId'],
             'TransactionID': msg_json['TransactionID'],
             'Solution': msg_json['Solution'],
         }
 
         if self.validate_solution(msg_json['Solution'], challenge['Challenge']) and challenge['Winner'] == 0:
             result['Result'] = 1
-            challenge['Winner'] = msg_json['ClientID']
+            challenge['Winner'] = msg_json['NodeId']
             challenge['Solution'] = msg_json['Solution']
 
             print('\nSolução encontrada: ', msg_json['Solution'])
-            print('Ganhador: ', msg_json['ClientID'])
+            print('Ganhador: ', msg_json['NodeId'])
         else:
             result['Result'] = 0
 
-        self.client.publish("sd/result", json.dumps(result))
+        self.sign_and_send("sd/result", json.dumps(result))
 
         if result['Result'] == 1:
             threading.Thread(target=self.show_menu).start()
@@ -310,13 +344,15 @@ class Client:
                         
                         result = {
                             'TransactionID': transaction_id,
-                            'ClientID': self.node_id,
+                            'NodeId': self.node_id,
                             'Solution': str(random_num)
                         }
 
                         print('Solução local encontrada: ', random_num)
                         if not self.solution_found:
-                            self.client.publish("sd/solution", json.dumps(result))
+                            msg = json.dumps(result)
+                            digest.update(msg.encode("utf-8"))
+                            self.sign_and_send("sd/solution",)
 
                         return
                 
@@ -342,9 +378,9 @@ class Client:
         Function to send a voting message to the MQTT broker.
         """
         vote = uuid.uuid4()
-        vote_msg = json.dumps({"ClientID": self.node_id, "VoteID": str(vote)})
+        vote_msg = json.dumps({"NodeId": self.node_id, "VoteID": str(vote)})
 
-        self.client.publish("sd/voting", vote_msg)    
+        self.sign_and_send("sd/voting", vote_msg)    
 
     def elect_leader(self):
         """
@@ -354,9 +390,9 @@ class Client:
         """
 
         # finds vote of biggest value, if there is a tie, client ID is used as tie breaker
-        max_vote = max(self.votes, key=lambda x: (x['VoteID'], x['ClientID']))
+        max_vote = max(self.votes, key=lambda x: (x['VoteID'], x['NodeId']))
 
-        if max_vote['ClientID'] == self.node_id:
+        if max_vote['NodeId'] == self.node_id:
             self.client.unsubscribe(["sd/result", "sd/challenge"])
             
             self.client.subscribe("sd/solution")
@@ -393,7 +429,7 @@ class Client:
         }
         self.challenges.append(challenge)
 
-        self.client.publish("sd/challenge", json.dumps({"TransactionID": challenge["TransactionID"], "Challenge": challenge["Challenge"]}))
+        self.sign_and_send("sd/challenge", json.dumps({"TransactionID": challenge["TransactionID"], "Challenge": challenge["Challenge"]}))
 
 
 if __name__ == "__main__":
