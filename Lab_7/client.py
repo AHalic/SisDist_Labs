@@ -94,6 +94,7 @@ class Client:
 
         # Topicos:
         # sd/init: NodeId <int>
+        # sd/pubkey: NodeId <int>, PubKey <str>
         # sd/voting: NodeId <int>, Vote <int>
         # sd/result: NodeId <int>, TransactionID <int>, Solution <string>, Result <int>
         # sd/challenge: TransactionID <int>, Challenge <string>
@@ -132,6 +133,9 @@ class Client:
             userdata (Any): User data.
             msg (mqtt.MQTTMessage): Message.
         """
+
+        print("MESSAGE")
+        print(msg.topic)
 
         if msg.topic == "sd/init":
             self.on_init(msg.payload)
